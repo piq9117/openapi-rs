@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_yaml;
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -11,25 +12,25 @@ pub struct OpenApi {
     pub components: Option<Component>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Info {
     pub title: String,
     pub description: String,
     pub version: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Server {
     pub url: String,
     pub description: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct PathItem {
     pub get: Option<Operation>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Operation {
     pub summary: Option<String>,
     pub description: Option<String>,
@@ -38,18 +39,18 @@ pub struct Operation {
     pub responses: Option<HashMap<String, Response>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Response {
     pub description: String,
     pub content: Option<HashMap<String, MediaType>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct MediaType {
     pub schema: Option<SchemaOrRef>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum SchemaOrRef {
     Ref {
@@ -59,18 +60,31 @@ pub enum SchemaOrRef {
     Inline(Schema),
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Schema {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub type_: Option<String>,
+
     #[serde(default, rename = "allOf", skip_serializing_if = "Vec::is_empty")]
     pub all_of: Vec<SchemaOrRef>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub required: Vec<String>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<HashMap<String, Schema>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Component {
     #[serde(default)]
     pub schemas: Option<HashMap<String, SchemaOrRef>>,
+}
+
+#[allow(dead_code)]
+pub fn decode_spec<'a>(raw_spec: &'a String) -> OpenApi {
+    match serde_yaml::from_str(raw_spec) {
+        Err(_) => panic!("Unable to decode spec"),
+        Ok(result) => result,
+    }
 }
