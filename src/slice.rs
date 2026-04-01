@@ -30,7 +30,9 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
         path_item_slice.insert(pathname.to_string(), path_item.clone());
     }
 
+    // TODO refactor when I'm less retarded about rust.
     let comps = vec![
+        // get
         find_components(
             path.cloned(),
             |path_item| path_item.get,
@@ -39,10 +41,61 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
             "application/json",
         ),
         find_components(
-            path.clone().cloned(),
+            path.cloned(),
+            |path_item| path_item.get,
+            spec.components.clone(),
+            "404",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.get,
+            spec.components.clone(),
+            "400",
+            "application/json",
+        ),
+        // post
+        find_components(
+            path.cloned(),
             |path_item| path_item.post,
             spec.components.clone(),
             "200",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.post,
+            spec.components.clone(),
+            "404",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.post,
+            spec.components.clone(),
+            "400",
+            "application/json",
+        ),
+        // put
+        find_components(
+            path.cloned(),
+            |path_item| path_item.put,
+            spec.components.clone(),
+            "200",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.put,
+            spec.components.clone(),
+            "404",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.put,
+            spec.components.clone(),
+            "400",
             "application/json",
         ),
     ];
