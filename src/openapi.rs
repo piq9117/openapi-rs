@@ -92,7 +92,7 @@ pub struct Component {
 #[allow(dead_code)]
 pub fn decode_spec<'a>(raw_spec: &'a String) -> OpenApi {
     match serde_yaml::from_str(raw_spec) {
-        Err(_) => panic!("Unable to decode spec"),
+        Err(err) => panic!("Unable to decode spec. Error {:?}", err),
         Ok(result) => result,
     }
 }
