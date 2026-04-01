@@ -16,7 +16,7 @@ pub struct OpenApiSlice {
     pub openapi: String,
     pub info: Info,
     pub servers: Vec<Server>,
-    pub path: HashMap<String, PathItem>,
+    pub paths: HashMap<String, PathItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<Component>,
 }
@@ -104,7 +104,7 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
         openapi: spec.openapi.clone(),
         info: spec.info.clone(),
         servers: spec.servers.clone(),
-        path: path_item_slice,
+        paths: path_item_slice,
         components: append_components(comps),
     }
 }
