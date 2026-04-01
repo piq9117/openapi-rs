@@ -1,1 +1,1 @@
-# openapi-rs
+# openapi-slice-rs
