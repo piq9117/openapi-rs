@@ -85,7 +85,7 @@ pub struct Schema {
     pub required: Vec<String>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub properties: Option<HashMap<String, Schema>>,
+    pub properties: Option<HashMap<String, SchemaOrRef>>,
 
     #[serde(default, rename = "maxLength", skip_serializing_if = "Option::is_none")]
     max_length: Option<i32>,
