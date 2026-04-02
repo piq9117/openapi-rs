@@ -30,6 +30,9 @@ components:
         "$ref": "#/components/schemas/Pet"
 
     Pet:
+      "$ref": "#/components/schemas/Name"
+
+    Name:
       type: object
       properties:
         name:
