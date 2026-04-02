@@ -37,6 +37,13 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
             path.cloned(),
             |path_item| path_item.get,
             spec.components.clone(),
+            "default",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.get,
+            spec.components.clone(),
             "200",
             "application/json",
         ),
@@ -59,6 +66,13 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
             path.cloned(),
             |path_item| path_item.post,
             spec.components.clone(),
+            "default",
+            "application/json",
+        ),
+        find_components(
+            path.cloned(),
+            |path_item| path_item.post,
+            spec.components.clone(),
             "200",
             "application/json",
         ),
@@ -77,6 +91,13 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
             "application/json",
         ),
         // put
+        find_components(
+            path.cloned(),
+            |path_item| path_item.put,
+            spec.components.clone(),
+            "default",
+            "application/json",
+        ),
         find_components(
             path.cloned(),
             |path_item| path_item.put,
