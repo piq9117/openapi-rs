@@ -135,7 +135,7 @@ fn mk_component(
 ) -> Option<Component> {
     match &schema_or_ref {
         Ref { r#ref } => {
-            let next_ref = r#ref.split('/').last()?;
+            let next_ref = r#ref.split('/').last()?.trim();
             mk_component(new_schema, next_ref, schema_or_ref.to_owned())
         }
         Inline(inline_schema) => {
@@ -162,6 +162,36 @@ fn append_components(components: Vec<Option<Component>>) -> Option<Component> {
     })
 }
 
+fn crawl_schema(
+    key: &str,
+    mut accum: HashMap<String, SchemaOrRef>,
+    source_schema: HashMap<String, SchemaOrRef>,
+) -> HashMap<String, SchemaOrRef> {
+    let schema = source_schema.get(key);
+    if let Some(s) = schema {
+        match s {
+            Inline(inline) => {
+                let item = inline.items.to_owned();
+
+                if let Some(i) = item {
+                    if let Ref { r#ref } = *i {
+                        let inner_key = r#ref.split('/').last().unwrap_or("");
+                        accum = crawl_schema(inner_key, accum.clone(), source_schema.clone());
+                    }
+                } else {
+                    accum.insert(key.to_string(), Inline(inline.to_owned()));
+                };
+            }
+            Ref { r#ref } => {
+                let inner_key = r#ref.split('/').last().unwrap_or("");
+                accum = crawl_schema(inner_key, accum.clone(), source_schema.clone());
+            }
+        }
+    }
+
+    accum
+}
+
 // find components from ref
 fn find_components<PathItemAccessor>(
     path_item: Option<PathItem>,
@@ -174,7 +204,8 @@ where
     PathItemAccessor: Fn(PathItem) -> Option<Operation>,
 {
     let item = path_item?;
-    let response_schema = get_response_schemas(item, path_item_accessor, response_key, media_type)?;
+    let response_schema =
+        get_response_schemas(item.clone(), path_item_accessor, response_key, media_type)?;
     let schema = HashMap::new();
 
     if let Ref { r#ref } = &response_schema {
@@ -185,17 +216,31 @@ where
 
         let schema = component_slice.schemas.as_mut()?;
 
-        for (_key, val) in schema.clone().iter() {
+        for (key, val) in schema.clone().iter() {
             match val {
                 Inline(inline) => {
-                    let items_schema_or_ref: SchemaOrRef = *inline.items.to_owned()?;
                     let source_schemas = components.clone()?.schemas?;
+                    let inline_schema_or_ref = inline.items.to_owned();
 
-                    if let Ref { r#ref } = items_schema_or_ref {
-                        let inner_ref = r#ref.split('/').last()?;
-                        let inner_schema = source_schemas.get(inner_ref)?;
-                        schema.insert(inner_ref.to_string(), inner_schema.clone());
-                    }
+                    if let Some(schema_or_ref) = inline_schema_or_ref {
+                        match *schema_or_ref {
+                            Ref { r#ref } => {
+                                let inner_key = r#ref.split('/').last()?;
+                                // TODO passing in schema, mutating it, then
+                                // appending it to the schema outside crawl_schema.
+                                // this looks like a circus.
+                                schema.extend(crawl_schema(inner_key, schema.to_owned(), source_schemas));
+                            }
+                            Inline(inline) => {
+                                if let Ref { r#ref } = *inline.items.to_owned()? {
+                                    let inner_key = r#ref.split('/').last()?;
+                                    schema.extend(crawl_schema(inner_key, schema.to_owned(), source_schemas));
+                                };
+                            }
+                        }
+                    };
+
+                    schema.insert(key.to_string(), Inline(inline.to_owned()));
                 }
                 Ref { r#ref } => {
                     let r = r#ref.split('/').last()?;
