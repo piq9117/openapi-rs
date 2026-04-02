@@ -89,6 +89,9 @@ pub struct Schema {
 
     #[serde(default, rename = "maxLength", skip_serializing_if = "Option::is_none")]
     max_length: Option<i32>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
