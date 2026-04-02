@@ -86,6 +86,9 @@ pub struct Schema {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<HashMap<String, Schema>>,
+
+    #[serde(default, rename = "maxLength", skip_serializing_if = "Option::is_none")]
+    max_length: Option<i32>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
