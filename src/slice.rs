@@ -15,7 +15,8 @@ use crate::openapi::{
 pub struct OpenApiSlice {
     pub openapi: String,
     pub info: Info,
-    pub servers: Vec<Server>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub servers: Option<Vec<Server>>,
     pub paths: HashMap<String, PathItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<Component>,

@@ -1,0 +1,33 @@
+openapi: 3.1.0
+info:
+  title: AnyOf Example
+  version: 1.0.0
+paths:
+  /test:
+    post:
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+
+components:
+  schemas:
+    Pet:
+      anyOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+    Cat:
+      type: object
+      properties:
+        type: { type: string, enum: ["cat"] }
+        name: { type: string }
+      required: ["type", "name"]
+    Dog:
+      type: object
+      properties:
+        type: { type: string, enum: ["dog"] }
+        breed: { type: string }
+      required: ["type", "breed"]
