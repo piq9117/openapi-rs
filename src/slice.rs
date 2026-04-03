@@ -32,7 +32,7 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
     }
 
     // TODO refactor when I'm less retarded about rust.
-    let comps = vec![
+    let comps: Vec<Option<Component>> = vec![
         // get
         find_components(
             path.cloned(),
@@ -131,6 +131,19 @@ pub fn get_path<'a>(spec: &'a OpenApi, pathname: &str) -> OpenApiSlice {
     }
 }
 
+fn get_request_body_schema(
+    path_item: PathItem,
+    path_item_accessor: fn(PathItem) -> Option<Operation>,
+    media_type: &str,
+) -> Option<SchemaOrRef> {
+    path_item_accessor(path_item)?
+        .request_body?
+        .content?
+        .get(media_type)?
+        .schema
+        .clone()
+}
+
 fn get_response_schemas<PathItemAccessor>(
     path_item: PathItem,
     accessor: PathItemAccessor,
@@ -221,6 +234,11 @@ fn iter_schema_append(
                     push_ref_from_schema_or_ref(any_of, &mut stack);
                 }
 
+                // allOf field
+                for all_of in &inline.all_of {
+                    push_ref_from_schema_or_ref(all_of, &mut stack);
+                }
+
                 // properties field
                 if let Some(prop) = &inline.properties {
                     for p in prop.values() {
@@ -243,18 +261,35 @@ fn find_components(
     media_type: &str,
 ) -> Option<Component> {
     let item = path_item?;
-    let response_schema: SchemaOrRef =
-        get_response_schemas(item.clone(), path_item_accessor, response_key, media_type)?;
+
+    let response_schema: Option<SchemaOrRef> =
+        get_response_schemas(item.clone(), path_item_accessor, response_key, media_type);
+
+    let request_body_schema: Option<SchemaOrRef> =
+        get_request_body_schema(item.clone(), path_item_accessor, media_type);
+
     let source_schema = source_components?.schemas?;
 
-    if let Ref { r#ref } = response_schema {
+    let request: HashMap<String, SchemaOrRef> = if let Some(Ref { r#ref }) = request_body_schema {
         let key = get_ref_key(&r#ref);
-        Some(Component {
-            schemas: Some(iter_schema_append(key, source_schema.clone())),
-        })
+        iter_schema_append(key, source_schema.clone())
     } else {
-        None
-    }
+        HashMap::new()
+    };
+
+    let mut response: HashMap<String, SchemaOrRef> = if let Some(Ref { r#ref }) = response_schema {
+        let key = get_ref_key(&r#ref);
+        iter_schema_append(key, source_schema.clone())
+    } else {
+        HashMap::new()
+    };
+
+    Some(Component {
+        schemas: Some({
+            response.extend(request);
+            response
+        }),
+    })
 }
 
 #[allow(dead_code)]

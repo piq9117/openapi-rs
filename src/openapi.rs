@@ -5,10 +5,14 @@ use std::collections::HashMap;
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct OpenApi {
     pub openapi: String,
+
     pub info: Info,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub servers: Option<Vec<Server>>,
+
     pub paths: HashMap<String, PathItem>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<Component>,
 }
@@ -16,14 +20,17 @@ pub struct OpenApi {
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Info {
     pub title: String,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+
     pub version: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Server {
     pub url: Option<String>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
@@ -32,8 +39,10 @@ pub struct Server {
 pub struct PathItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub get: Option<Operation>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub post: Option<Operation>,
+
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub put: Option<Operation>,
 }
@@ -41,15 +50,32 @@ pub struct PathItem {
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Operation {
     pub summary: Option<String>,
+
     pub description: Option<String>,
+
     #[serde(rename = "operationId")]
     pub operation_id: Option<String>,
+
+    #[serde(rename = "requestBody", skip_serializing_if = "Option::is_none")]
+    pub request_body: Option<RequestBody>,
+
     pub responses: Option<HashMap<String, Response>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
+pub struct RequestBody {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content: Option<HashMap<String, MediaType>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq)]
 pub struct Response {
     pub description: String,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content: Option<HashMap<String, MediaType>>,
 }
 
